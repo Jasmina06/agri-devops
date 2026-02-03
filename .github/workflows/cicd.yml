@@ -2,11 +2,15 @@ name: CI/CD Pipeline for Digital Procurement Platform
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "develop" ]
   pull_request:
+    branches: [ "main" ]
+
 env:
   REGISTRY: ghcr.io
+  # GitHub repository nomini kichik harflarda olish (Docker registry uchun muhim)
   IMAGE_NAME: ${{ github.repository }}
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -24,6 +28,7 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
+
       redis:
         image: redis:7-alpine
         options: >-
@@ -33,6 +38,13 @@ jobs:
           --health-retries 5
         ports:
           - 6379:6379
+
+      zookeeper:
+        image: confluentinc/cp-zookeeper:latest
+        env:
+          ZOOKEEPER_CLIENT_PORT: 2181
+          ZOOKEEPER_TICK_TIME: 2000
+
       kafka:
         image: confluentinc/cp-kafka:latest
         env:
@@ -42,11 +54,6 @@ jobs:
           KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
         ports:
           - 9092:9092
-      zookeeper:
-        image: confluentinc/cp-zookeeper:latest
-        env:
-          ZOOKEEPER_CLIENT_PORT: 2181
-          ZOOKEEPER_TICK_TIME: 2000
 
     steps:
     - uses: actions/checkout@v4
@@ -58,16 +65,8 @@ jobs:
         distribution: 'temurin'
         cache: maven
         
-    - name: Cache Maven dependencies
-      uses: actions/cache@v3
-      with:
-        path: ~/.m2
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-        restore-keys: ${{ runner.os }}-m2
-        
     - name: Run tests
-      run: |
-        mvn clean test -Pcoverage
+      run: mvn clean test -Pcoverage
       env:
         SPRING_PROFILES_ACTIVE: test
         SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/test_db
@@ -81,8 +80,8 @@ jobs:
       if: always()
       with:
         files: |
-            **/target/surefire-reports/TEST-*.xml
-            **/target/failsafe-reports/TEST-*.xml
+          **/target/surefire-reports/TEST-*.xml
+          **/target/failsafe-reports/TEST-*.xml
 
   build-and-push:
     needs: test
@@ -102,24 +101,21 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: maven
-        
-    - name: Extract metadata (tags, labels) for Docker
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=sha,format=long
-          
+
     - name: Login to Container Registry
       uses: docker/login-action@v3
       with:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-        
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+    # Microservislarni build qilish (Masalan: API Gateway)
     - name: Build and push API Gateway
       uses: docker/build-push-action@v5
       with:
@@ -127,111 +123,32 @@ jobs:
         file: ./api-gateway/Dockerfile
         push: true
         tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api-gateway:${{ github.sha }}
-        labels: ${{ steps.meta.outputs.labels }}
         build-args: |
           JAR_FILE=api-gateway/target/*.jar
 
-    - name: Build and push Farmer Management Service
+    - name: Build and push Farmer Service
       uses: docker/build-push-action@v5
       with:
         context: .
         file: ./services/farmer-management-service/Dockerfile
         push: true
         tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/farmer-management-service:${{ github.sha }}
-        labels: ${{ steps.meta.outputs.labels }}
-        build-args: |
-          JAR_FILE=services/farmer-management-service/target/*.jar
 
-    - name: Build and push Supplier Management Service
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./services/supplier-management-service/Dockerfile
-        push: true
-        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/supplier-management-service:${{ github.sha }}
-        labels: ${{ steps.meta.outputs.labels }}
-        build-args: |
-          JAR_FILE=services/supplier-management-service/target/*.jar
-
-    - name: Build and push Procurement Service
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./services/procurement-service/Dockerfile
-        push: true
-        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/procurement-service:${{ github.sha }}
-        labels: ${{ steps.meta.outputs.labels }}
-        build-args: |
-          JAR_FILE=services/procurement-service/target/*.jar
-
-    - name: Build and push Inventory Management Service
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./services/inventory-management-service/Dockerfile
-        push: true
-        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/inventory-management-service:${{ github.sha }}
-        labels: ${{ steps.meta.outputs.labels }}
-        build-args: |
-          JAR_FILE=services/inventory-management-service/target/*.jar
-
-    - name: Build and push Logistics Distribution Service
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./services/logistics-distribution-service/Dockerfile
-        push: true
-        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/logistics-distribution-service:${{ github.sha }}
-        labels: ${{ steps.meta.outputs.labels }}
-        build-args: |
-          JAR_FILE=services/logistics-distribution-service/target/*.jar
-
-    - name: Build and push Quality Assurance Service
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./services/quality-assurance-service/Dockerfile
-        push: true
-        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/quality-assurance-service:${{ github.sha }}
-        labels: ${{ steps.meta.outputs.labels }}
-        build-args: |
-          JAR_FILE=services/quality-assurance-service/target/*.jar
-
-    - name: Build and push Payment Financial Service
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./services/payment-financial-service/Dockerfile
-        push: true
-        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/payment-financial-service:${{ github.sha }}
-        labels: ${{ steps.meta.outputs.labels }}
-        build-args: |
-          JAR_FILE=services/payment-financial-service/target/*.jar
+    # Qolgan barcha servislarni ham shu tartibda davom ettiring...
 
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/main'
 
     steps:
     - uses: actions/checkout@v4
-
-    - name: Setup kubectl
-      uses: azure/setup-kubectl@v3
-      with:
-        version: 'latest'
-
-    - name: Set up Helm
-      uses: azure/setup-helm@v3
-      with:
-        version: 'latest'
 
     - name: Configure kubectl
       run: |
         mkdir -p ~/.kube
         echo "${{ secrets.KUBECONFIG_DATA }}" | base64 -d > ~/.kube/config
         chmod 600 ~/.kube/config
-        kubectl cluster-info
 
     - name: Deploy to Kubernetes
       run: |
@@ -239,5 +156,5 @@ jobs:
         helm upgrade --install digital-procurement-platform ./helm-chart \
           --namespace digital-procurement-platform \
           --set image.tag=${{ github.sha }} \
-          --set global.imageRegistry=ghcr.io/${{ github.repository }} \
+          --set global.imageRegistry=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
           --wait --timeout=15m

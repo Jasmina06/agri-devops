@@ -1,0 +1,172 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: farmer-management-service
+          uri: lb://farmer-management-service
+          predicates:
+            - Path=/farmers/**
+        - id: farmer-swagger
+          uri: lb://farmer-management-service
+          predicates:
+            - Path=/services/farmer/swagger-ui/**
+          filters:
+            - RewritePath=/services/farmer/(?<path>.*), /$\{path}
+        - id: farmer-api-docs
+          uri: lb://farmer-management-service
+          predicates:
+            - Path=/services/farmer/v3/api-docs/**
+          filters:
+            - RewritePath=/services/farmer/(?<path>.*), /$\{path}
+        - id: supplier-management-service
+          uri: lb://supplier-management-service
+          predicates:
+            - Path=/suppliers/**
+        - id: supplier-swagger
+          uri: lb://supplier-management-service
+          predicates:
+            - Path=/services/supplier/swagger-ui/**
+          filters:
+            - RewritePath=/services/supplier/(?<path>.*), /$\{path}
+        - id: supplier-api-docs
+          uri: lb://supplier-management-service
+          predicates:
+            - Path=/services/supplier/v3/api-docs/**
+          filters:
+            - RewritePath=/services/supplier/(?<path>.*), /$\{path}
+        - id: procurement-service
+          uri: lb://procurement-service
+          predicates:
+            - Path=/procurements/**
+        - id: procurement-swagger
+          uri: lb://procurement-service
+          predicates:
+            - Path=/services/procurement/swagger-ui/**
+          filters:
+            - RewritePath=/services/procurement/(?<path>.*), /$\{path}
+        - id: procurement-api-docs
+          uri: lb://procurement-service
+          predicates:
+            - Path=/services/procurement/v3/api-docs/**
+          filters:
+            - RewritePath=/services/procurement/(?<path>.*), /$\{path}
+        - id: inventory-management-service
+          uri: lb://inventory-management-service
+          predicates:
+            - Path=/inventory/**
+        - id: inventory-swagger
+          uri: lb://inventory-management-service
+          predicates:
+            - Path=/services/inventory/swagger-ui/**
+          filters:
+            - RewritePath=/services/inventory/(?<path>.*), /$\{path}
+        - id: inventory-api-docs
+          uri: lb://inventory-management-service
+          predicates:
+            - Path=/services/inventory/v3/api-docs/**
+          filters:
+            - RewritePath=/services/inventory/(?<path>.*), /$\{path}
+        - id: logistics-distribution-service
+          uri: lb://logistics-distribution-service
+          predicates:
+            - Path=/logistics/**
+        - id: logistics-swagger
+          uri: lb://logistics-distribution-service
+          predicates:
+            - Path=/services/logistics/swagger-ui/**
+          filters:
+            - RewritePath=/services/logistics/(?<path>.*), /$\{path}
+        - id: logistics-api-docs
+          uri: lb://logistics-distribution-service
+          predicates:
+            - Path=/services/logistics/v3/api-docs/**
+          filters:
+            - RewritePath=/services/logistics/(?<path>.*), /$\{path}
+        - id: quality-assurance-service
+          uri: lb://quality-assurance-service
+          predicates:
+            - Path=/quality/**
+        - id: quality-swagger
+          uri: lb://quality-assurance-service
+          predicates:
+            - Path=/services/quality/swagger-ui/**
+          filters:
+            - RewritePath=/services/quality/(?<path>.*), /$\{path}
+        - id: quality-api-docs
+          uri: lb://quality-assurance-service
+          predicates:
+            - Path=/services/quality/v3/api-docs/**
+          filters:
+            - RewritePath=/services/quality/(?<path>.*), /$\{path}
+        - id: payment-financial-service
+          uri: lb://payment-financial-service
+          predicates:
+            - Path=/payments/**
+        - id: payment-swagger
+          uri: lb://payment-financial-service
+          predicates:
+            - Path=/services/payment/swagger-ui/**
+          filters:
+            - RewritePath=/services/payment/(?<path>.*), /$\{path}
+        - id: payment-api-docs
+          uri: lb://payment-financial-service
+          predicates:
+            - Path=/services/payment/v3/api-docs/**
+          filters:
+            - RewritePath=/services/payment/(?<path>.*), /$\{path}
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+        - RewritePath=/ (?<segment>/?.*), /api-gateway/$\{segment}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka}
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.value}
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  info:
+    git:
+      mode: full
+
+logging:
+  level:
+    com.agrifood.platform: DEBUG
+    org.springframework.cloud.gateway: TRACE
+    org.springframework.web.reactive.function.client: DEBUG
+
+info:
+  app:
+    name: ${spring.application.name}
+    version: 1.0.0
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  show-actuator: true

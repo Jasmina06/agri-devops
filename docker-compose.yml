@@ -1,0 +1,339 @@
+version: '3.8'
+
+services:
+  # PostgreSQL databases
+  postgres-vineyard:
+    image: postgres:15
+    container_name: postgres_vineyard_db
+    environment:
+      POSTGRES_DB: vineyard_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_vineyard_data:/var/lib/postgresql/data
+
+  postgres-sensor:
+    image: postgres:15
+    container_name: postgres_sensor_db
+    environment:
+      POSTGRES_DB: sensor_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_sensor_data:/var/lib/postgresql/data
+
+  postgres-weather:
+    image: postgres:15
+    container_name: postgres_weather_db
+    environment:
+      POSTGRES_DB: weather_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_weather_data:/var/lib/postgresql/data
+
+  postgres-analytics:
+    image: postgres:15
+    container_name: postgres_analytics_db
+    environment:
+      POSTGRES_DB: analytics_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_analytics_data:/var/lib/postgresql/data
+
+  postgres-notification:
+    image: postgres:15
+    container_name: postgres_notification_db
+    environment:
+      POSTGRES_DB: notification_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres_notification_data:/var/lib/postgresql/data
+
+  postgres-market:
+    image: postgres:15
+    container_name: postgres_market_db
+    environment:
+      POSTGRES_DB: market_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5437:5432"
+    volumes:
+      - postgres_market_data:/var/lib/postgresql/data
+
+  # Redis cache
+  redis:
+    image: redis:7-alpine
+    container_name: redis_cache
+    ports:
+      - "6379:6379"
+
+  # Kafka ecosystem
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  # Eureka Service Discovery (optional)
+  eureka-server:
+    image: eclipse-temurin:17-jre
+    container_name: eureka_server
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    command: ["java", "-jar", "/app/eureka-server.jar"]
+    # Note: This would require building a separate Eureka server service
+
+  # PostgreSQL databases
+  postgres-farmer:
+    image: postgres:15
+    container_name: postgres_farmer_db
+    environment:
+      POSTGRES_DB: farmer_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_farmer_data:/var/lib/postgresql/data
+
+  postgres-supplier:
+    image: postgres:15
+    container_name: postgres_supplier_db
+    environment:
+      POSTGRES_DB: supplier_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_supplier_data:/var/lib/postgresql/data
+
+  postgres-procurement:
+    image: postgres:15
+    container_name: postgres_procurement_db
+    environment:
+      POSTGRES_DB: procurement_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_procurement_data:/var/lib/postgresql/data
+
+  postgres-inventory:
+    image: postgres:15
+    container_name: postgres_inventory_db
+    environment:
+      POSTGRES_DB: inventory_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_inventory_data:/var/lib/postgresql/data
+
+  postgres-logistics:
+    image: postgres:15
+    container_name: postgres_logistics_db
+    environment:
+      POSTGRES_DB: logistics_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres_logistics_data:/var/lib/postgresql/data
+
+  postgres-quality:
+    image: postgres:15
+    container_name: postgres_quality_db
+    environment:
+      POSTGRES_DB: quality_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5437:5432"
+    volumes:
+      - postgres_quality_data:/var/lib/postgresql/data
+
+  postgres-payment:
+    image: postgres:15
+    container_name: postgres_payment_db
+    environment:
+      POSTGRES_DB: payment_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5438:5432"
+    volumes:
+      - postgres_payment_data:/var/lib/postgresql/data
+
+  # API Gateway
+  api-gateway:
+    build: ./api-gateway
+    container_name: api_gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres-farmer
+      - postgres-supplier
+      - postgres-procurement
+      - postgres-inventory
+      - postgres-logistics
+      - postgres-quality
+      - postgres-payment
+      - redis
+      - kafka
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-farmer:5432/farmer_db
+      - REDIS_HOST=redis
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+
+  # Microservices
+  farmer-management-service:
+    build: ./services/farmer-management-service
+    container_name: farmer_management_service
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres-farmer
+      - redis
+      - kafka
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-farmer:5432/farmer_db
+      - REDIS_HOST=redis
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+
+  supplier-management-service:
+    build: ./services/supplier-management-service
+    container_name: supplier_management_service
+    ports:
+      - "8082:8082"
+    depends_on:
+      - postgres-supplier
+      - redis
+      - kafka
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-supplier:5432/supplier_db
+      - REDIS_HOST=redis
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+
+  procurement-service:
+    build: ./services/procurement-service
+    container_name: procurement_service
+    ports:
+      - "8083:8083"
+    depends_on:
+      - postgres-procurement
+      - redis
+      - kafka
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-procurement:5432/procurement_db
+      - REDIS_HOST=redis
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+
+  inventory-management-service:
+    build: ./services/inventory-management-service
+    container_name: inventory_management_service
+    ports:
+      - "8084:8084"
+    depends_on:
+      - postgres-inventory
+      - redis
+      - kafka
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-inventory:5432/inventory_db
+      - REDIS_HOST=redis
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+
+  logistics-distribution-service:
+    build: ./services/logistics-distribution-service
+    container_name: logistics_distribution_service
+    ports:
+      - "8085:8085"
+    depends_on:
+      - postgres-logistics
+      - redis
+      - kafka
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-logistics:5432/logistics_db
+      - REDIS_HOST=redis
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+
+  quality-assurance-service:
+    build: ./services/quality-assurance-service
+    container_name: quality_assurance_service
+    ports:
+      - "8086:8086"
+    depends_on:
+      - postgres-quality
+      - redis
+      - kafka
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-quality:5432/quality_db
+      - REDIS_HOST=redis
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+
+  payment-financial-service:
+    build: ./services/payment-financial-service
+    container_name: payment_financial_service
+    ports:
+      - "8087:8087"
+    depends_on:
+      - postgres-payment
+      - redis
+      - kafka
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-payment:5432/payment_db
+      - REDIS_HOST=redis
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+
+volumes:
+  postgres_vineyard_data:
+  postgres_sensor_data:
+  postgres_weather_data:
+  postgres_analytics_data:
+  postgres_notification_data:
+  postgres_market_data:

@@ -1,0 +1,189 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "precision-viticulture-platform.weather-integration.fullname" . }}-blue
+  labels:
+    {{- include "precision-viticulture-platform.labels" . | nindent 4 }}
+    app: weather-integration-service
+    version: blue
+spec:
+  replicas: {{ .Values.weatherIntegration.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "precision-viticulture-platform.selectorLabels" . | nindent 6 }}
+      app: weather-integration-service
+      version: blue
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+      labels:
+        {{- include "precision-viticulture-platform.selectorLabels" . | nindent 8 }}
+        app: weather-integration-service
+        version: blue
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: weather-integration-container
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}/{{ .Values.weatherIntegration.image.repository }}:{{ .Values.weatherIntegration.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.weatherIntegration.service.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+          resources:
+            {{- toYaml .Values.weatherIntegration.resources | nindent 12 }}
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "kubernetes"
+            - name: SERVER_PORT
+              value: "{{ .Values.weatherIntegration.service.port }}"
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://postgresql:5432/weather_db"
+            - name: REDIS_HOST
+              value: "redis-master"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
+            - name: WEATHER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: weather-api-secret
+                  key: api-key
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/config
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ include "precision-viticulture-platform.fullname" . }}-config
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "precision-viticulture-platform.weather-integration.fullname" . }}-green
+  labels:
+    {{- include "precision-viticulture-platform.labels" . | nindent 4 }}
+    app: weather-integration-service
+    version: green
+spec:
+  replicas: {{ .Values.weatherIntegration.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "precision-viticulture-platform.selectorLabels" . | nindent 6 }}
+      app: weather-integration-service
+      version: green
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+      labels:
+        {{- include "precision-viticulture-platform.selectorLabels" . | nindent 8 }}
+        app: weather-integration-service
+        version: green
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: weather-integration-container
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}/{{ .Values.weatherIntegration.image.repository }}:{{ .Values.weatherIntegration.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.weatherIntegration.service.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+          resources:
+            {{- toYaml .Values.weatherIntegration.resources | nindent 12 }}
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "kubernetes"
+            - name: SERVER_PORT
+              value: "{{ .Values.weatherIntegration.service.port }}"
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://postgresql:5432/weather_db"
+            - name: REDIS_HOST
+              value: "redis-master"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
+            - name: WEATHER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: weather-api-secret
+                  key: api-key
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/config
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ include "precision-viticulture-platform.fullname" . }}-config
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: weather-integration-service
+  labels:
+    {{- include "precision-viticulture-platform.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.weatherIntegration.service.type | default "ClusterIP" }}
+  ports:
+    - port: {{ .Values.weatherIntegration.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "precision-viticulture-platform.selectorLabels" . | nindent 4 }}
+    app: weather-integration-service
+    version: blue  # Initially route to blue deployment

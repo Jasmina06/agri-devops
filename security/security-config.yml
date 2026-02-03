@@ -1,0 +1,48 @@
+# Security Configuration for Precision Viticulture Platform
+
+## JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:mySecretKeyForViticulturePlatformThatShouldBeLongAndSecure}
+  expiration: ${JWT_EXPIRATION:86400000}  # 24 hours in milliseconds
+
+## OAuth2 Configuration
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OAUTH2_ISSUER_URI:http://localhost:8080/auth/realms/viticulture}
+          jwk-set-uri: ${OAUTH2_JWK_SET_URI:http://localhost:8080/auth/realms/viticulture/protocol/openid-connect/certs}
+
+## Rate Limiting Configuration
+rate-limiting:
+  enabled: true
+  default-limit: 100  # requests per minute per IP
+  sensor-data-service-limit: 1000  # higher limit for sensor data ingestion
+  vineyard-management-service-limit: 50
+  burst-capacity: 200
+
+## DDoS Protection
+ddos-protection:
+  enabled: true
+  threshold: 1000  # requests per minute per IP before blocking
+  window-size: 60000  # 1 minute window in milliseconds
+  ban-duration: 300000  # 5 minutes ban duration in milliseconds
+
+## Mutual TLS Configuration
+mutual-tls:
+  enabled: true
+  trust-store: classpath:tls/truststore.jks
+  trust-store-password: ${TLS_TRUSTSTORE_PASSWORD:changeit}
+  key-store: classpath:tls/keystore.jks
+  key-store-password: ${TLS_KEYSTORE_PASSWORD:changeit}
+
+## API Security Headers
+security:
+  headers:
+    hsts: true
+    x-frame-options: DENY
+    x-content-type-options: nosniff
+    x-xss-protection: 1; mode=block
+    strict-transport-security: max-age=31536000; includeSubDomains
+    content-security-policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'

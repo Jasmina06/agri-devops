@@ -1,0 +1,203 @@
+# Global settings
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: ""
+
+# Image settings
+image:
+  registry: docker.io
+  repository: viticulture-platform
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+# Service settings
+service:
+  type: ClusterIP
+  port: 8080
+
+# Resource limits and requests
+resources:
+  limits:
+    cpu: 500m
+    memory: 1Gi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+# Persistence settings
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClass: ""
+
+# PostgreSQL configuration
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: "postgres"
+    database: "viticulture_platform"
+  persistence:
+    enabled: true
+    size: 10Gi
+
+# Redis configuration
+redis:
+  enabled: true
+  auth:
+    enabled: false
+  master:
+    persistence:
+      enabled: true
+      size: 5Gi
+
+# Kafka configuration
+kafka:
+  enabled: true
+  replicaCount: 1
+  persistence:
+    enabled: true
+    size: 10Gi
+
+# Service configurations
+apiGateway:
+  replicaCount: 2
+  image:
+    repository: api-gateway
+    tag: latest
+  service:
+    type: LoadBalancer
+    port: 8080
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi
+
+farmerManagement:
+  replicaCount: 2
+  image:
+    repository: farmer-management-service
+    tag: latest
+  service:
+    port: 8081
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi
+
+supplierManagement:
+  replicaCount: 2
+  image:
+    repository: supplier-management-service
+    tag: latest
+  service:
+    port: 8082
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi
+
+procurement:
+  replicaCount: 2
+  image:
+    repository: procurement-service
+    tag: latest
+  service:
+    port: 8083
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi
+
+inventoryManagement:
+  replicaCount: 2
+  image:
+    repository: inventory-management-service
+    tag: latest
+  service:
+    port: 8084
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi
+
+logisticsDistribution:
+  replicaCount: 2
+  image:
+    repository: logistics-distribution-service
+    tag: latest
+  service:
+    port: 8085
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi
+
+qualityAssurance:
+  replicaCount: 2
+  image:
+    repository: quality-assurance-service
+    tag: latest
+  service:
+    port: 8086
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi
+
+paymentFinancial:
+  replicaCount: 2
+  image:
+    repository: payment-financial-service
+    tag: latest
+  service:
+    port: 8087
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi
+
+# Ingress configuration
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: viticulture.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity
+affinity: {}

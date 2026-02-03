@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "precision-viticulture-platform.fullname" . }}-config
+data:
+  application.yml: |
+    spring:
+      datasource:
+        url: jdbc:postgresql://postgresql:5432/vineyard_db
+        username: postgres
+        password: {{ .Values.postgresql.auth.postgresPassword }}
+        driver-class-name: org.postgresql.Driver
+      jpa:
+        hibernate:
+          ddl-auto: update
+        show-sql: true
+        properties:
+          hibernate:
+            dialect: org.hibernate.dialect.PostgreSQLDialect
+      redis:
+        host: redis-master
+        port: 6379
+      kafka:
+        producer:
+          bootstrap-servers: kafka:9092
+          key-serializer: org.apache.kafka.common.serialization.StringSerializer
+          value-serializer: org.apache.kafka.common.serialization.StringSerializer
+        consumer:
+          bootstrap-servers: kafka:9092
+          group-id: platform-service-group
+          key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+          value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+    eureka:
+      client:
+        service-url:
+          defaultZone: http://eureka-server:8761/eureka
+      instance:
+        prefer-ip-address: true
+
+    jwt:
+      secret: viticulture-platform-secret-key-for-jwt-tokens
+      expiration: 86400000  # 24 hours
+
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: health,info,metrics,prometheus
+      endpoint:
+        health:
+          show-details: always

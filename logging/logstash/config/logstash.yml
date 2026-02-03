@@ -1,0 +1,14 @@
+http.host: "0.0.0.0"
+xpack.monitoring.elasticsearch.hosts: [ "http://elasticsearch:9200" ]
+
+# Pipeline identifier
+pipeline.id: main
+
+# Number of pipeline workers
+pipeline.workers: 2
+
+# Batch size
+pipeline.batch.size: 125
+
+# Batch delay
+pipeline.batch.delay: 50

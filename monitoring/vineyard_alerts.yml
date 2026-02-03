@@ -1,0 +1,62 @@
+groups:
+  - name: vineyard.rules
+    rules:
+    # Alert when sensor data service is down
+    - alert: SensorDataServiceDown
+      expr: up{job="sensor-data-service"} == 0
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Sensor Data Service is down"
+        description: "The sensor data service has been down for more than 1 minute."
+
+    # Alert when vineyard management service response time is too high
+    - alert: HighVineyardServiceResponseTime
+      expr: histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{uri=~"/vineyard/.*"}[5m])) > 2
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High response time for vineyard management service"
+        description: "95th percentile of response time is above 2 seconds for more than 2 minutes."
+
+    # Alert when sensor data volume drops significantly
+    - alert: LowSensorDataVolume
+      expr: rate(sensor_data_received_total[5m]) < 0.1 * bool avg_over_time(rate(sensor_data_received_total[1h])[1d:])
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Low sensor data volume detected"
+        description: "Sensor data volume is significantly lower than average."
+
+    # Alert for critical weather conditions
+    - alert: CriticalWeatherConditions
+      expr: weather_temperature_celsius > 35 or weather_temperature_celsius < -5
+      for: 30m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Critical weather conditions detected"
+        description: "Temperature is outside safe range for vineyard operations."
+
+    # Alert for high notification queue
+    - alert: HighNotificationQueue
+      expr: notification_queue_size > 1000
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High notification queue size"
+        description: "Notification queue has more than 1000 pending messages."
+
+    # Alert for low market data freshness
+    - alert: StaleMarketData
+      expr: time() - max(market_data_last_updated_timestamp) > 3600
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Market data is stale"
+        description: "Market data has not been updated in the last hour."

@@ -1,0 +1,95 @@
+# Java Spring DevOps Project Prompt: Precision Viticulture Platform
+
+## Project Overview
+Create a comprehensive DevOps implementation for a Precision Viticulture Platform using Java Spring Boot microservices architecture. The project should be fundamentally different in structure and approach from previous implementations while maintaining agricultural focus.
+
+## Architecture Requirements
+- Use Java Spring Boot 3.x with Spring Cloud for microservices
+- Implement event-driven architecture using Apache Kafka
+- Use PostgreSQL for main data storage and Redis for caching
+- Deploy using Docker containers orchestrated by Kubernetes
+- Implement API Gateway pattern using Spring Cloud Gateway
+- Use JWT-based authentication and authorization
+
+## Service Structure
+1. **Vineyard Management Service** - Manages vineyard plots, grape varieties, and seasonal activities
+2. **Sensor Data Service** - Collects and processes IoT sensor data from vineyards
+3. **Weather Integration Service** - Integrates weather forecasts and historical climate data
+4. **Analytics Service** - Performs predictive analytics for harvest timing and disease prevention
+5. **Notification Service** - Manages alerts and notifications for critical events
+6. **Market Intelligence Service** - Tracks wine market prices and demand trends
+
+## DevOps Implementation Requirements
+- Use Jenkins for CI/CD pipelines (instead of GitHub Actions)
+- Implement blue-green deployment strategy
+- Use Helm charts for Kubernetes deployments
+- Implement comprehensive logging with ELK stack (Elasticsearch, Logstash, Kibana)
+- Set up monitoring with Prometheus and Grafana
+- Implement chaos engineering practices using Chaos Monkey
+- Use Terraform for infrastructure as code (IaC)
+- Implement service mesh with Istio for traffic management
+- Use Vault for secrets management
+- Implement GitOps workflow with ArgoCD
+- Use SonarQube for code quality analysis
+- Implement backup and disaster recovery with Velero
+- Use Nexus or JFrog Artifactory for artifact management
+
+## Security Requirements
+- Implement OAuth2 with Spring Security
+- Use Vault for secret management
+- Implement API rate limiting and DDoS protection
+- Secure inter-service communication with mutual TLS
+
+## Testing Strategy
+- Unit tests using JUnit 5 and Mockito
+- Integration tests using TestContainers
+- Contract testing with Spring Cloud Contract
+- Performance testing with Gatling
+- Security testing with OWASP ZAP integration
+
+## Documentation Requirements
+- API documentation using Springdoc OpenAPI (Swagger)
+- Architecture decision records (ADRs)
+- Deployment guides for different environments
+- Disaster recovery procedures
+
+## Performance Requirements
+- Sub-200ms response time for 95% of API requests
+- Support for 10,000+ concurrent sensor connections
+- Zero-downtime deployments during critical growing seasons
+- Auto-scaling based on sensor data volume
+
+## Monitoring and Observability
+- Distributed tracing with Jaeger
+- Custom business metrics related to vineyard operations
+- Real-time dashboard for vineyard health monitoring
+- Automated alerting for critical thresholds
+
+## Deliverables Structure
+1. Executive Summary with business value proposition
+2. Technical Architecture Document
+3. Complete CI/CD Pipeline Configuration
+4. Security Implementation Guide
+5. Testing Strategy and Results
+6. Performance Benchmarking Report
+7. Monitoring and Observability Setup
+8. Deployment Playbooks
+9. Maintenance and Operations Manual
+
+## Unique Differentiators Required
+- Focus on seasonal agricultural patterns in system design
+- Edge computing capabilities for remote vineyard locations
+- Integration with satellite imagery and drone data
+- Predictive maintenance for agricultural equipment
+- Carbon footprint tracking and sustainability metrics
+- Multi-tenancy support for vineyard management companies
+- Offline-first capabilities for areas with poor connectivity
+- Blockchain integration for wine provenance tracking
+
+## Code Quality Standards
+- Follow Spring Boot best practices and conventions
+- Implement clean architecture principles
+- Use reactive programming where appropriate for high-throughput operations
+- Apply domain-driven design concepts
+- Include comprehensive error handling and retry mechanisms
+- Implement circuit breaker patterns for service resilience

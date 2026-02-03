@@ -1,0 +1,98 @@
+# Prometheus configuration for Precision Viticulture Platform
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # Alert rules for vineyard operations
+  - "vineyard_alerts.yml"
+
+scrape_configs:
+  - job_name: 'api-gateway'
+    static_configs:
+      - targets: ['api-gateway:8080']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+
+  - job_name: 'farmer-management-service'
+    static_configs:
+      - targets: ['farmer-management-service:8081']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+
+  - job_name: 'supplier-management-service'
+    static_configs:
+      - targets: ['supplier-management-service:8082']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+
+  - job_name: 'procurement-service'
+    static_configs:
+      - targets: ['procurement-service:8083']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+
+  - job_name: 'inventory-management-service'
+    static_configs:
+      - targets: ['inventory-management-service:8084']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+
+  - job_name: 'logistics-distribution-service'
+    static_configs:
+      - targets: ['logistics-distribution-service:8085']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+
+  - job_name: 'quality-assurance-service'
+    static_configs:
+      - targets: ['quality-assurance-service:8086']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+
+  - job_name: 'payment-financial-service'
+    static_configs:
+      - targets: ['payment-financial-service:8087']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+
+  - job_name: 'sensor-data-service'
+    static_configs:
+      - targets: ['sensor-data-service:8082']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 5s  # More frequent for sensor data
+
+  - job_name: 'weather-integration-service'
+    static_configs:
+      - targets: ['weather-integration-service:8083']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+
+  - job_name: 'analytics-service'
+    static_configs:
+      - targets: ['analytics-service:8084']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+
+  - job_name: 'notification-service'
+    static_configs:
+      - targets: ['notification-service:8085']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+
+  - job_name: 'market-intelligence-service'
+    static_configs:
+      - targets: ['market-intelligence-service:8086']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+
+  # System metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # Database metrics
+  - job_name: 'postgres-exporter'
+    static_configs:
+      - targets: ['postgres-exporter:9187']

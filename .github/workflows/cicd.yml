@@ -2,13 +2,9 @@ name: CI/CD Pipeline for Digital Procurement Platform
 
 on:
   push:
-    branches: [ main, develop, master ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ main, develop ]
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+    branches: ["main"]
 
 jobs:
   test:

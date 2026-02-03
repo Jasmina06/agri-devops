@@ -41,8 +41,6 @@ jobs:
           KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
         ports:
           - 9092:9092
-        depends_on:
-          - zookeeper
       zookeeper:
         image: confluentinc/cp-zookeeper:latest
         env:
